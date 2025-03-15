@@ -63,7 +63,7 @@ export default function Snake(array: InputSnake): ResultSnake {
         break;
       }
       case Direction.Left: {
-        leftRight = 0;
+        leftRight = boundaries.left;
         topDown--;
         boundaries.updateBoundary("bottom");
         flow = Direction.Up;
