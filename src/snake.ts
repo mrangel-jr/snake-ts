@@ -33,6 +33,9 @@ const getBoundary = (
 export default function Snake(array: InputSnake): ResultSnake {
   const result: ResultSnake = [];
   const size = array.length;
+  if (size === 1 && array[0].length === 0) {
+    return result;
+  }
   const boundaries: Boundary = {
     top: 0,
     left: 0,
