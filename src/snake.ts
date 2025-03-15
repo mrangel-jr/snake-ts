@@ -5,6 +5,7 @@ type Boundary = {
   bottom: number;
   left: number;
   right: number;
+  updateBoundary: (key: keyof Omit<Boundary, "updateBoundary">) => void;
 };
 enum Direction {
   Up,
@@ -16,13 +17,13 @@ enum Direction {
 const getBoundary = (
   topDown: number,
   leftRight: number,
-  squareBoundaries: Boundary
+  boundaries: Boundary
 ): boolean => {
   if (
-    topDown >= squareBoundaries.top &&
-    topDown < squareBoundaries.bottom &&
-    leftRight >= squareBoundaries.left &&
-    leftRight < squareBoundaries.right
+    topDown >= boundaries.top &&
+    topDown < boundaries.bottom &&
+    leftRight >= boundaries.left &&
+    leftRight < boundaries.right
   ) {
     return true;
   }
@@ -32,49 +33,53 @@ const getBoundary = (
 export default function Snake(array: InputSnake): ResultSnake {
   const result: ResultSnake = [];
   const size = array.length;
-  let squareBoundaries: Boundary = {
+  const boundaries: Boundary = {
     top: 0,
     left: 0,
     right: size,
     bottom: size,
+    updateBoundary: (key) => {
+      const numberToUpdate = key === "top" || key === "left" ? 1 : -1;
+      boundaries[key] = boundaries[key] + numberToUpdate;
+    },
   };
-  let flow: number = Direction.Right;
+  let flow = Direction.Right as Direction;
   let topDown = 0;
   let leftRight = 0;
   const updateDirection = () => {
     switch (flow) {
       case Direction.Right: {
-        leftRight = squareBoundaries.right - 1;
+        leftRight = boundaries.right - 1;
         topDown++;
-        squareBoundaries.top = topDown;
+        boundaries.updateBoundary("top");
         flow = Direction.Down;
         break;
       }
       case Direction.Down: {
-        topDown = squareBoundaries.bottom - 1;
+        topDown = boundaries.bottom - 1;
         leftRight--;
-        squareBoundaries.right = squareBoundaries.right - 1;
+        boundaries.updateBoundary("right");
         flow = Direction.Left;
         break;
       }
       case Direction.Left: {
         leftRight = 0;
         topDown--;
-        squareBoundaries.bottom = squareBoundaries.bottom - 1;
+        boundaries.updateBoundary("bottom");
         flow = Direction.Up;
         break;
       }
       case Direction.Up: {
-        squareBoundaries.left = squareBoundaries.left + 1;
-        leftRight = squareBoundaries.left;
-        topDown = squareBoundaries.top;
+        boundaries.updateBoundary("left");
+        leftRight = boundaries.left;
+        topDown = boundaries.top;
         flow = Direction.Right;
         break;
       }
     }
+    return;
   };
-  for (let i = 0; i < size * size; i++) {
-    result.push(array[topDown][leftRight]);
+  const nextStep = () => {
     switch (flow) {
       case Direction.Right: {
         leftRight++;
@@ -93,7 +98,16 @@ export default function Snake(array: InputSnake): ResultSnake {
         break;
       }
     }
-    !getBoundary(topDown, leftRight, squareBoundaries) && updateDirection();
+    return;
+  };
+  for (let i = 0; i < size * size; i++) {
+    //Adiciona elemento no array
+    result.push(array[topDown][leftRight]);
+    //Navega para a próxima casa seguindo a última orientação (Up, Down, Left, Right)
+    nextStep();
+    //Caso a coordenada X,Y no próximo item (leftRight,topDown) não exista na fronteira criada (squareBoundaries)
+    //Atualiza a Direção - Atualiza a fronteira - Atualiza a coordenada
+    !getBoundary(topDown, leftRight, boundaries) && updateDirection();
   }
   return result;
 }
